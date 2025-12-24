@@ -23,8 +23,6 @@ I built muTube to experiment with media playback on muOS and create my own take 
 ## Installation
 (Nothing yet!)
 
-(Refer to the included documentation for full setup instructions.)
-
 ---
 
 ## Related Projects..?
