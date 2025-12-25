@@ -33,12 +33,19 @@ export QT_PLUGIN_PATH="$BINDIR/plugins"
 export MUTUBE_MPV="$BINDIR/mpv"
 export MUTUBE_YTDLP="$BINDIR/yt-dlp"
 export MUTUBE_FORMAT="worst"
+export MUTUBE_NODE="$BINDIR/node"
+
+export GPTOKEYB="$(GET_VAR "device" "storage/rom/mount")/MUOS/PortMaster/gptokeyb2.armhf"
+export GPTOKEY_MPV_CONFIG="/opt/muos/share/emulator/gptokeyb/ext-mpv-general.gptk"
+
+export FUNC_SCRIPT="/opt/muos/script/var/func.sh"
+
 
 # Launcher
 cd "$LOVEDIR" || exit
 SET_VAR "system" "foreground_process" "love"
 
 # Run Application
-./bin/love . "${SCREEN_RESOLUTION}"
+./bin/love . "${SCREEN_RESOLUTION}" > "$LOVEDIR/output.log" 2>&1
 
 kill -9 "$(pidof gptokeyb2.armhf)"

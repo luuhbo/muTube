@@ -9,9 +9,20 @@ function Search:query(query_string)
     self.selected = 1
 
     local ytdlp_path = os.getenv("MUTUBE_YTDLP") or "yt-dlp"
+    local node_path = os.getenv("MUTUBE_NODE")
+
+    local js_flag = ""
+    if node_path and node_path ~= "" then
+        js_flag = string.format('--js-runtimes node:%s', node_path)
+    end
+
     local command = string.format(
-        '%s "ytsearch5:%s" --get-title --get-url',
+        '%s %s "ytsearch5:%s" ' ..
+        '--flat-playlist --no-playlist --skip-download ' ..
+        '--ignore-errors --no-warnings ' ..
+        '--print "%%(title)s" --print "%%(url)s"',
         ytdlp_path,
+        js_flag,
         query_string
     )
 
@@ -27,15 +38,15 @@ function Search:query(query_string)
 
     local lines = {}
     for line in output:gmatch("[^\r\n]+") do
-        table.insert(lines, line)
+        lines[#lines + 1] = line
     end
 
     for i = 1, #lines, 2 do
-        if lines[i+1] then
-            table.insert(self.results, {
+        if lines[i + 1] then
+            self.results[#self.results + 1] = {
                 title = lines[i],
-                url = lines[i+1]
-            })
+                url = lines[i + 1]
+            }
         end
     end
 end

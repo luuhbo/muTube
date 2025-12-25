@@ -19,7 +19,7 @@ local SearchBarUI = require("ui.search_bar")
 local Keyboard = require("ui.osk")  -- OSK
 
 -- Search query
-local searchQuery = "lofi hip hop"
+local searchQuery = "dog of wisdom"
 
 function love.load()
     love.graphics.setFont(love.graphics.newFont(14))
@@ -98,5 +98,23 @@ function love.draw()
 end
 
 function love.keypressed(key)
-    Input.keypressed(key)
+    -- Map keyboard keys to input events
+    if key == "y" then
+        Input.keypressed("search")       -- trigger search (OSK)
+    elseif key == "return" then
+        Input.keypressed("return")       -- select / confirm
+    elseif key == "escape" then
+        Input.keypressed("escape")       -- cancel / quit
+    elseif key == "up" then
+        Input.keypressed("up")           -- move cursor up
+    elseif key == "down" then
+        Input.keypressed("down")         -- move cursor down
+    elseif key == "left" then
+        Input.keypressed("left")         -- move cursor left
+    elseif key == "right" then
+        Input.keypressed("right")        -- move cursor right
+    else
+        -- For letters and numbers, optionally send them directly to the OSK
+        Input.keypressed(key)
+    end
 end
