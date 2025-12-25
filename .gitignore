@@ -1,3 +1,6 @@
 dev_launch.sh
 .devdata/
 .devfiles/
+bin/node
+bin/npm
+bin/npx
