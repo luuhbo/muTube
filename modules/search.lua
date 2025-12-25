@@ -8,10 +8,13 @@ function Search:query(query_string)
     self.results = {}
     self.selected = 1
 
+    local ytdlp_path = os.getenv("MUTUBE_YTDLP") or "yt-dlp"
     local command = string.format(
-        'yt-dlp "ytsearch5:%s" --get-title --get-url',
+        '%s "ytsearch5:%s" --get-title --get-url',
+        ytdlp_path,
         query_string
     )
+
 
     local handle = io.popen(command)
     if not handle then

@@ -98,23 +98,5 @@ function love.draw()
 end
 
 function love.keypressed(key)
-    -- Map keyboard keys to input events
-    if key == "y" then
-        Input.keypressed("search")
-    elseif key == "escape" then
-        Input.keypressed("escape")
-    elseif key == "up" then
-        Input.keypressed("up")
-    elseif key == "down" then
-        Input.keypressed("down")
-    elseif key == "left" then
-        Input.keypressed("left")
-    elseif key == "right" then
-        Input.keypressed("right")
-    elseif key == "return" then
-        Input.keypressed("return")
-    else
-        -- Pass other keys directly (optional)
-        Input.keypressed(key)
-    end
+    Input.keypressed(key)
 end

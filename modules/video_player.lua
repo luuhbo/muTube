@@ -7,6 +7,9 @@ local config = {
     format     = os.getenv("MUTUBE_FORMAT") or "worst",
 }
 
+print("[VideoPlayer] MUTUBE_YTDLP:", os.getenv("MUTUBE_YTDLP"))
+
+
 function VideoPlayer:play(url)
     if not url or url == "" then return end
 

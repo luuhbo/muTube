@@ -94,7 +94,7 @@ function Keyboard.handleEvent(event)
     Keyboard.move("right")
   elseif event == "return" then
     Keyboard.select()
-  elseif event == "escape" or event == "b" then
+  elseif event == "escape"  then
     Keyboard.cancel()
   end
 end

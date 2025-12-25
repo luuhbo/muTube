@@ -21,7 +21,8 @@ InputHandler.events = {
     SEARCH = "search",
     PREV = "[",
     NEXT = "]",
-    SEL = "select",   -- new
+    BACK = "back",
+    SEL = "guide",   -- new
     START = "start",  -- new
 }
 
@@ -34,7 +35,6 @@ InputHandler.joystick_mapping = {
     ["x"] = InputHandler.events.MENU,
     ["a"] = InputHandler.events.RETURN,
     ["b"] = InputHandler.events.ESC,
-    ["back"] = InputHandler.events.MENU,
     ["leftshoulder"] = InputHandler.events.PREV,
     ["rightshoulder"] = InputHandler.events.NEXT,
     ["start"] = InputHandler.events.START,    -- map physical start button
@@ -46,7 +46,7 @@ local cooldown_duration = 0.2
 local last_trigger_time = -cooldown_duration
 
 local combo = {
-    select_pressed = false,
+    back_pressed = false,
     start_pressed = false,
 }
 
@@ -81,6 +81,16 @@ end
 -- Update input state (polling joystick buttons)
 function InputHandler.update(dt)
     if joystick then
+        -- Track combo states
+        combo.back_pressed = joystick:isGamepadDown("back")
+        combo.start_pressed = joystick:isGamepadDown("start")
+
+        -- Check for Quit Combo
+        if combo.back_pressed and combo.start_pressed then
+            love.event.quit()
+        end
+
+        -- Existing polling logic
         for button, event in pairs(InputHandler.joystick_mapping) do
             if joystick:isGamepadDown(button) then
                 trigger(event)
