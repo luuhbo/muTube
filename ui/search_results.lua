@@ -1,8 +1,12 @@
 local SearchResultsUI = {}
 
-SearchResultsUI.x = 50
+local screenWidth = os.getenv("SCREEN_WIDTH")
+local screenHeight = os.getenv("SCREEN_HEIGHT")
+local screenResolution = os.getenv("SREEN_RESOLUTION")
+
+SearchResultsUI.x = 40
 SearchResultsUI.y = 100
-SearchResultsUI.line_height = 30
+SearchResultsUI.line_height = 60
 SearchResultsUI.max_visible = 8
 
 function SearchResultsUI:draw(search)

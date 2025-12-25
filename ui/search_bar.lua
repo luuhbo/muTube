@@ -3,8 +3,8 @@ local SearchBarUI = {}
 -- Layout config
 SearchBarUI.x = 40
 SearchBarUI.y = 30
-SearchBarUI.width = 720
-SearchBarUI.height = 40
+SearchBarUI.width = 944
+SearchBarUI.height = 100
 
 function SearchBarUI:draw(query, focused)
     --Background
@@ -20,7 +20,7 @@ function SearchBarUI:draw(query, focused)
         self.y,
         self.width,
         self.height,
-        6, 6
+        50 , 50
     )
 
     -- Border
@@ -36,7 +36,7 @@ function SearchBarUI:draw(query, focused)
         self.y,
         self.width,
         self.height,
-        6, 6
+        50, 50
     )
 
     -- Text

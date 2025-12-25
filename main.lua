@@ -21,8 +21,18 @@ local Keyboard = require("ui.osk")  -- OSK
 -- Search query
 local searchQuery = "dog of wisdom"
 
+-- ENV from mux_launch.sh
+local screenWidth = os.getenv("SCREEN_WIDTH")
+local screenHeight = os.getenv("SCREEN_HEIGHT")
+local screenResolution = os.getenv("SREEN_RESOLUTION")
+
 function love.load()
-    love.graphics.setFont(love.graphics.newFont(14))
+    local width = tonumber(screenWidth) or 1280
+    local height = tonumber(screenHeight) or 720
+    love.window.setMode(width, height)
+    local dpiScale = (love.window.getDPIScale and love.window.getDPIScale()) or 1
+    local fontSize = math.max(12, math.floor(height * 0.06 * dpiScale))
+    love.graphics.setFont(love.graphics.newFont(fontSize))
     Input.load()
 end
 
