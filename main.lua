@@ -8,10 +8,6 @@ local STATE = {
 
 local appState = STATE.SEARCH
 
-local lastEvents = {}  -- store last few events
-local maxEvents = 5    -- how many to show
-
-
 -- Modules
 local Input = require("modules.input_handler")
 local Search = require("modules.search")
@@ -25,7 +21,7 @@ local Keyboard = require("ui.osk")  -- OSK
 local Logger = require("modules.logger")
 
 -- Search query
-local searchQuery = "dog of wisdom"
+local searchQuery = ""
 
 -- ENV from mux_launch.sh
 local screenWidth = os.getenv("SCREEN_WIDTH")

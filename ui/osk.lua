@@ -11,7 +11,7 @@ Keyboard.layout = {
   { "q","w","e","r","t","y","u","i","o","p" },
   { "a","s","d","f","g","h","j","k","l" },
   { "z","x","c","v","b","n","m" },
-  { "SPACE", "DEL", "OK" }
+  { "DEL", "SPACE", "OK" }
 }
 
 Keyboard.on_submit = nil
@@ -140,41 +140,54 @@ function Keyboard.draw()
   love.graphics.setColor(0.86, 0.9, 0.94, 0.9)
   love.graphics.rectangle("line", startX-10, startY-50, Keyboard.width+20, Keyboard.height+60, 12, 12)
 
-  -- Draw keys, justified per row (keys span the row width)
--- Inside Keyboard.draw(), replacing your key drawing loop
   for r, row in ipairs(Keyboard.layout) do
       local cols = #row
-      local totalRowWidth = cols * keyW + (cols-1) * gap
-      local rowStartX = startX + (Keyboard.width - totalRowWidth) / 2
+      local totalRowWidth = 0
+      local rowWidths = {}
+
+      -- calculate widths for each key in this row
+      for c, key in ipairs(row) do
+          local w = keyW
+          if key == "SPACE" then
+              w = keyW * 3      -- spacebar 3x normal key
+          elseif key == "DEL" or key == "OK" then
+              w = keyW * 1.5    -- slightly larger
+          end
+          rowWidths[c] = w
+          totalRowWidth = totalRowWidth + w
+      end
+      totalRowWidth = totalRowWidth + (cols-1) * gap
+      local rowStartX = startX + (Keyboard.width - totalRowWidth)/2
       local y = startY + (r-1)*(keyH+gap)
 
+      local x = rowStartX
       for c, key in ipairs(row) do
-          local x = rowStartX + (c-1)*(keyW+gap)
+          local w = rowWidths[c]
+          local cornerRadius = keyH * 0.3
 
-          local cornerRadius = keyH * 0.3 -- more rounded
-
-          -- Key background
+          -- draw key background
           love.graphics.setColor(1, 1, 1, 1)
-          love.graphics.rectangle("fill", x, y, keyW, keyH, cornerRadius, cornerRadius)
+          love.graphics.rectangle("fill", x, y, w, keyH, cornerRadius, cornerRadius)
 
-          -- Highlight selected key
+          -- highlight selected key
           if r == Keyboard.cursor.row and c == Keyboard.cursor.col then
               love.graphics.setColor(0.35, 0.65, 1.0, 0.18)
-              love.graphics.rectangle("fill", x, y, keyW, keyH, cornerRadius, cornerRadius)
+              love.graphics.rectangle("fill", x, y, w, keyH, cornerRadius, cornerRadius)
           end
 
-          -- Key border
+          -- border
           love.graphics.setColor(0.82, 0.87, 0.92, 0.95)
-          love.graphics.rectangle("line", x, y, keyW, keyH, cornerRadius, cornerRadius)
+          love.graphics.rectangle("line", x, y, w, keyH, cornerRadius, cornerRadius)
 
-          -- Key text (centered)
+          -- key text
           local font = love.graphics.getFont()
           local textY = y + (keyH - font:getHeight()) / 2
           Theme.setColor("text_dark")
-          love.graphics.printf(key, x, textY, keyW, "center")
+          love.graphics.printf(key, x, textY, w, "center")
+
+          x = x + w + gap
       end
   end
-
 end
 
 return Keyboard
