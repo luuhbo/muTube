@@ -8,6 +8,10 @@ local STATE = {
 
 local appState = STATE.SEARCH
 
+local lastEvents = {}  -- store last few events
+local maxEvents = 5    -- how many to show
+
+
 -- Modules
 local Input = require("modules.input_handler")
 local Search = require("modules.search")
@@ -18,6 +22,7 @@ local FooterUI = require("ui.footer")
 local SearchResultsUI = require("ui.search_results")
 local SearchBarUI = require("ui.search_bar")
 local Keyboard = require("ui.osk")  -- OSK
+local Logger = require("modules.logger")
 
 -- Search query
 local searchQuery = "dog of wisdom"
@@ -37,13 +42,14 @@ function love.load()
     SearchBarUI:load(width, height)
     SearchResultsUI:load(width, height)
     FooterUI:load(width, height)
+    -- small font for on-screen debug overlay
+    debugFont = love.graphics.newFont(14)
 end
 
 function love.update(dt)
     Input.update(dt)
 
     Input.onEvent(function(event)
-
         -- Keyboard active consumes input first
         if Keyboard.active then
             Keyboard.handleEvent(event)
@@ -63,7 +69,9 @@ function love.update(dt)
                     end,
                     function() -- on cancel
                         print("Keyboard cancelled")
-                    end
+                    end,
+                    love.graphics.getWidth(),
+                    love.graphics.getHeight()
                 )
             end
             return
@@ -117,6 +125,8 @@ function love.keypressed(key)
     -- Map keyboard keys to input events
     if key == "y" then
         Input.keypressed("search")       -- trigger search (OSK)
+    elseif key == "x" then
+        Input.keypressed("menu")
     elseif key == "return" then
         Input.keypressed("return")       -- select / confirm
     elseif key == "escape" then
@@ -128,7 +138,8 @@ function love.keypressed(key)
     elseif key == "left" then
         Input.keypressed("left")         -- move cursor left
     elseif key == "right" then
-        Input.keypressed("right")        -- move cursor right
+        Input.keypressed("right")
+            -- move cursor right
     else
         -- For letters and numbers, optionally send them directly to the OSK
         Input.keypressed(key)

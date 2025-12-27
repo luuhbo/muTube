@@ -1,21 +1,33 @@
 local Theme = require("ui.theme")
+local Logger = require("modules.logger")
 
 local SearchBarUI = {}
 SearchBarUI.__index = SearchBarUI
 
 -- Default layout (fallback)
-SearchBarUI.x = 40
-SearchBarUI.y = 30
-SearchBarUI.width = 720
-SearchBarUI.height = 40
+SearchBarUI.heightRatio = 0.10   -- 10% of screen height
+SearchBarUI.widthRatio  = 0.94   -- 94% of screen width
+SearchBarUI.xRatio      = 0.03   -- 3% margin from left
+SearchBarUI.yRatio      = 0.03   -- 3% margin from top
+
 
 function SearchBarUI:load(screenWidth, screenHeight)
-    self.x = screenWidth * 0.03
-    self.y = screenHeight * 0.03
-    self.width  = screenWidth * 0.94
-    self.height = screenHeight * 0.10
+    self.screenWidth  = screenWidth or love.graphics.getWidth()
+    self.screenHeight = screenHeight or love.graphics.getHeight()
 
-    -- Create font ONCE
+    local dpi = 1
+    if love.window and love.window.getDPIScale then
+        dpi = love.window.getDPIScale()
+    end
+    Logger.log(string.format("[SearchBarUI] screen %dx%d dpi=%.2f", self.screenWidth, self.screenHeight, dpi))
+
+    -- Compute actual position & size
+    self.width  = screenWidth * self.widthRatio
+    self.height = screenHeight * self.heightRatio
+    self.x      = screenWidth * self.xRatio
+    self.y      = screenHeight * self.yRatio
+
+    -- Create font once
     self.font = love.graphics.newFont(math.floor(self.height * 0.5))
 end
 

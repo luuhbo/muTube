@@ -1,5 +1,6 @@
 -- ui/keyboard.lua
 local Theme = require("ui.theme")
+local Logger = require("modules.logger")
 local Keyboard = {}
 
 Keyboard.active = false
@@ -27,6 +28,11 @@ function Keyboard.open(initial_text, on_submit, on_cancel, screenWidth, screenHe
   -- Size dynamically based on screen
   Keyboard.screenWidth = screenWidth or love.graphics.getWidth()
   Keyboard.screenHeight = screenHeight or love.graphics.getHeight()
+  local dpi = 1
+  if love.window and love.window.getDPIScale then
+    dpi = love.window.getDPIScale()
+  end
+  Logger.log(string.format("[Keyboard] screen %dx%d dpi=%.2f", Keyboard.screenWidth, Keyboard.screenHeight, dpi))
   Keyboard.width = Keyboard.screenWidth * 0.9       -- 90% of width
   Keyboard.height = Keyboard.screenHeight * 0.5     -- 50% of height
   Keyboard.x = (Keyboard.screenWidth - Keyboard.width)/2
@@ -105,6 +111,8 @@ function Keyboard.handleEvent(event)
     Keyboard.select()
   elseif event == "escape" then
     Keyboard.cancel()
+  elseif event == "menu" then
+    Keyboard.text = Keyboard.text:sub(1, -2)
   end
 end
 

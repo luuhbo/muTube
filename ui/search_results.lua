@@ -1,12 +1,22 @@
 -- ui/search_results.lua
 local Theme = require("ui.theme")
+local Logger = require("modules.logger")
 local SearchResultsUI = {}
 
 function SearchResultsUI:load(screenWidth, screenHeight)
+    self.screenWidth = screenWidth
+    self.screenHeight = screenHeight
+
     self.x = screenWidth * 0.03
     self.y = screenHeight * 0.2
     self.width = screenWidth * 0.94
     self.height = screenHeight * 0.85
+
+    local dpi = 1
+    if love.window and love.window.getDPIScale then
+        dpi = love.window.getDPIScale()
+    end
+    Logger.log(string.format("[SearchResultsUI] screen %dx%d dpi=%.2f", self.screenWidth, self.screenHeight, dpi))
 
     self.cols = 3
     self.spacing = screenWidth * 0.02
