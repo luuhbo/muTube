@@ -1,4 +1,5 @@
 -- ui/keyboard.lua
+local Theme = require("ui.theme")
 local Keyboard = {}
 
 Keyboard.active = false
@@ -16,12 +17,20 @@ Keyboard.on_submit = nil
 Keyboard.on_cancel = nil
 
 -- Open keyboard
-function Keyboard.open(initial_text, on_submit, on_cancel)
+function Keyboard.open(initial_text, on_submit, on_cancel, screenWidth, screenHeight)
   Keyboard.active = true
   Keyboard.text = initial_text or ""
   Keyboard.cursor = { row = 1, col = 1 }
   Keyboard.on_submit = on_submit
   Keyboard.on_cancel = on_cancel
+
+  -- Size dynamically based on screen
+  Keyboard.screenWidth = screenWidth or love.graphics.getWidth()
+  Keyboard.screenHeight = screenHeight or love.graphics.getHeight()
+  Keyboard.width = Keyboard.screenWidth * 0.9       -- 90% of width
+  Keyboard.height = Keyboard.screenHeight * 0.5     -- 50% of height
+  Keyboard.x = (Keyboard.screenWidth - Keyboard.width)/2
+  Keyboard.y = Keyboard.screenHeight * 0.25        -- a bit lower than top
 end
 
 -- Close keyboard
@@ -94,7 +103,7 @@ function Keyboard.handleEvent(event)
     Keyboard.move("right")
   elseif event == "return" then
     Keyboard.select()
-  elseif event == "escape"  then
+  elseif event == "escape" then
     Keyboard.cancel()
   end
 end
@@ -103,31 +112,61 @@ end
 function Keyboard.draw()
   if not Keyboard.active then return end
 
-  -- Draw background
-  love.graphics.setColor(0.2, 0.2, 0.2, 0.9)
-  love.graphics.rectangle("fill", 50, 100, 500, 200)
-
-  -- Draw current text
-  love.graphics.setColor(1,1,1)
-  love.graphics.print("Input: " .. Keyboard.text, 60, 110)
-
-  -- Draw keys
-  local startY = 140
-  local keyW, keyH = 40, 30
-  for r, row in ipairs(Keyboard.layout) do
-    for c, key in ipairs(row) do
-      local x = 60 + (c-1)*(keyW+5)
-      local y = startY + (r-1)*(keyH+5)
-      if r == Keyboard.cursor.row and c == Keyboard.cursor.col then
-        love.graphics.setColor(0, 1, 0) -- highlight current key
-      else
-        love.graphics.setColor(1, 1, 1)
-      end
-      love.graphics.rectangle("line", x, y, keyW, keyH)
-      love.graphics.setColor(1,1,1)
-      love.graphics.print(key, x+5, y+5)
-    end
+  local startX, startY = Keyboard.x, Keyboard.y
+  local startX, startY = Keyboard.x, Keyboard.y
+  local maxCols = 0
+  for _, row in ipairs(Keyboard.layout) do
+    if #row > maxCols then maxCols = #row end
   end
+  local gap = 10
+  local keyH = (Keyboard.height - (#Keyboard.layout+1)*gap)/#Keyboard.layout
+
+  -- Uniform key width based on the widest row
+  local keyW = (Keyboard.width - (maxCols+1)*gap)/maxCols
+
+  -- Draw panel background as white (mostly opaque)
+  love.graphics.setColor(1, 1, 1, 0.95)
+  love.graphics.rectangle("fill", startX-10, startY-50, Keyboard.width+20, Keyboard.height+60, 12, 12)
+
+  -- Draw subtle border around panel
+  love.graphics.setColor(0.86, 0.9, 0.94, 0.9)
+  love.graphics.rectangle("line", startX-10, startY-50, Keyboard.width+20, Keyboard.height+60, 12, 12)
+
+  -- Draw keys, justified per row (keys span the row width)
+-- Inside Keyboard.draw(), replacing your key drawing loop
+  for r, row in ipairs(Keyboard.layout) do
+      local cols = #row
+      local totalRowWidth = cols * keyW + (cols-1) * gap
+      local rowStartX = startX + (Keyboard.width - totalRowWidth) / 2
+      local y = startY + (r-1)*(keyH+gap)
+
+      for c, key in ipairs(row) do
+          local x = rowStartX + (c-1)*(keyW+gap)
+
+          local cornerRadius = keyH * 0.3 -- more rounded
+
+          -- Key background
+          love.graphics.setColor(1, 1, 1, 1)
+          love.graphics.rectangle("fill", x, y, keyW, keyH, cornerRadius, cornerRadius)
+
+          -- Highlight selected key
+          if r == Keyboard.cursor.row and c == Keyboard.cursor.col then
+              love.graphics.setColor(0.35, 0.65, 1.0, 0.18)
+              love.graphics.rectangle("fill", x, y, keyW, keyH, cornerRadius, cornerRadius)
+          end
+
+          -- Key border
+          love.graphics.setColor(0.82, 0.87, 0.92, 0.95)
+          love.graphics.rectangle("line", x, y, keyW, keyH, cornerRadius, cornerRadius)
+
+          -- Key text (centered)
+          local font = love.graphics.getFont()
+          local textY = y + (keyH - font:getHeight()) / 2
+          Theme.setColor("text_dark")
+          love.graphics.printf(key, x, textY, keyW, "center")
+      end
+  end
+
 end
 
 return Keyboard

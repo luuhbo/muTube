@@ -14,6 +14,7 @@ local Search = require("modules.search")
 local VideoPlayer = require("modules.video_player")
 
 -- UI
+local FooterUI = require("ui.footer")
 local SearchResultsUI = require("ui.search_results")
 local SearchBarUI = require("ui.search_bar")
 local Keyboard = require("ui.osk")  -- OSK
@@ -30,10 +31,12 @@ function love.load()
     local width = tonumber(screenWidth) or 1280
     local height = tonumber(screenHeight) or 720
     love.window.setMode(width, height)
-    local dpiScale = (love.window.getDPIScale and love.window.getDPIScale()) or 1
-    local fontSize = math.max(12, math.floor(height * 0.06 * dpiScale))
-    love.graphics.setFont(love.graphics.newFont(fontSize))
+    love.graphics.setFont(love.graphics.newFont(30))
     Input.load()
+
+    SearchBarUI:load(width, height)
+    SearchResultsUI:load(width, height)
+    FooterUI:load(width, height)
 end
 
 function love.update(dt)
@@ -44,6 +47,7 @@ function love.update(dt)
         -- Keyboard active consumes input first
         if Keyboard.active then
             Keyboard.handleEvent(event)
+            searchQuery = Keyboard.text
             return
         end
 
@@ -70,13 +74,13 @@ function love.update(dt)
             -- Add other navigation if needed
         elseif appState == STATE.RESULTS then
             if event == "up" then
-                if Search.selected == 1 then
-                    appState = STATE.SEARCH
-                else
-                    Search:prev()
-                end
+                Search:moveUp()
             elseif event == "down" then
-                Search:next()
+                Search:moveDown()
+            elseif event == "left" then
+                Search:moveLeft()
+            elseif event == "right" then
+                Search:moveRight()
             elseif event == "return" then
                 local video = Search:getSelected()
                 if video then
@@ -93,13 +97,15 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.clear(0.1, 0.1, 0.1)
+    love.graphics.clear(1, 1, 1)
 
     -- Draw search bar (focused if in SEARCH state)
     SearchBarUI:draw(searchQuery, appState == STATE.SEARCH)
 
     -- Draw search results
     SearchResultsUI:draw(Search)
+
+    FooterUI:draw()
 
     -- Draw on-screen keyboard if active
     if Keyboard.active then

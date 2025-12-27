@@ -1,40 +1,101 @@
+-- ui/search_results.lua
+local Theme = require("ui.theme")
 local SearchResultsUI = {}
 
-local screenWidth = os.getenv("SCREEN_WIDTH")
-local screenHeight = os.getenv("SCREEN_HEIGHT")
-local screenResolution = os.getenv("SREEN_RESOLUTION")
+function SearchResultsUI:load(screenWidth, screenHeight)
+    self.x = screenWidth * 0.03
+    self.y = screenHeight * 0.2
+    self.width = screenWidth * 0.94
+    self.height = screenHeight * 0.85
 
-SearchResultsUI.x = 40
-SearchResultsUI.y = 100
-SearchResultsUI.line_height = 60
-SearchResultsUI.max_visible = 8
+    self.cols = 3
+    self.spacing = screenWidth * 0.02
+    self.cellWidth = (self.width - (self.cols - 1) * self.spacing) / self.cols
+    self.cellHeight = self.cellWidth * 0.6
+
+    local fontSize = math.floor(self.cellHeight * 0.18)
+    self.font = love.graphics.newFont(fontSize)
+end
+
+function SearchResultsUI:truncate(text, maxWidth)
+    if self.font:getWidth(text) <= maxWidth then
+        return text
+    end
+
+    local ellipsis = "..."
+    local truncated = text
+
+    while self.font:getWidth(truncated .. ellipsis) > maxWidth and #truncated > 0 do
+        truncated = truncated:sub(1, -2)
+    end
+
+    return truncated .. ellipsis
+end
+
 
 function SearchResultsUI:draw(search)
     local results = search:getResults()
-    local selected = search.selected
+    local rowHeight = self.cellHeight + self.spacing
+    local padding = self.cellWidth * 0.05
 
-    if #results == 0 then
-        love.graphics.setColor(0.7, 0.7, 0.7)
-        love.graphics.print("No results", self.x, self.y)
-        return
-    end
+    love.graphics.setFont(self.font)
 
-    local start = math.max(1, selected - self.max_visible + 1)
-    local finish = math.min(#results, start + self.max_visible - 1)
+    for i, result in ipairs(results) do
+        local col = (i - 1) % self.cols
+        local row = math.floor((i - 1) / self.cols)
 
-    for i = start, finish do
-        local y = self.y + (i - start) * self.line_height
+        local cellX = self.x + col * (self.cellWidth + self.spacing)
+        local cellY = self.y + row * rowHeight
 
-        if i == selected then
-            love.graphics.setColor(0.2, 0.6, 0.2)
-            love.graphics.rectangle("fill", self.x - 10, y, 700, self.line_height)
-            love.graphics.setColor(1, 1, 1)
+        -- Background
+        if i == search.selected then
+            Theme.withAlpha("glass_bg", 0.35)
         else
-            love.graphics.setColor(1, 1, 1)
+            Theme.withAlpha("glass_bg", 0.22)
         end
 
-        love.graphics.print(results[i].title, self.x, y + 5)
+        love.graphics.rectangle(
+            "fill",
+            cellX,
+            cellY,
+            self.cellWidth,
+            self.cellHeight,
+            10,
+            10
+        )
+
+        -- Border (accent if selected)
+        if i == search.selected then
+            Theme.withAlpha("accent", 0.7)
+        else
+            Theme.withAlpha("glass_border", 0.3)
+        end
+
+        love.graphics.rectangle(
+            "line",
+            cellX,
+            cellY,
+            self.cellWidth,
+            self.cellHeight,
+            10,
+            10
+        )
+
+        -- Title text
+        Theme.setColor("text_dark")
+
+        local maxTextWidth = self.cellWidth - padding * 2
+        local title = self:truncate(result.title, maxTextWidth)
+
+        love.graphics.printf(
+            title,
+            cellX + padding,
+            cellY + self.cellHeight - self.font:getHeight() - padding,
+            maxTextWidth,
+            "center"
+        )
     end
 end
+
 
 return SearchResultsUI

@@ -2,6 +2,7 @@ local Search = {}
 
 Search.results = {}
 Search.selected = 1
+Search.cols = 3  -- must match your UI columns
 
 -- Run a YouTube search
 function Search:query(query_string)
@@ -25,7 +26,6 @@ function Search:query(query_string)
         js_flag,
         query_string
     )
-
 
     local handle = io.popen(command)
     if not handle then
@@ -51,16 +51,29 @@ function Search:query(query_string)
     end
 end
 
--- Move selection down
-function Search:next()
-    if #self.results == 0 then return end
-    self.selected = math.min(self.selected + 1, #self.results)
+-- Grid navigation functions
+function Search:moveUp()
+    if self.selected > self.cols then
+        self.selected = self.selected - self.cols
+    end
 end
 
--- Move selection up
-function Search:prev()
-    if #self.results == 0 then return end
-    self.selected = math.max(self.selected - 1, 1)
+function Search:moveDown()
+    if self.selected + self.cols <= #self.results then
+        self.selected = self.selected + self.cols
+    end
+end
+
+function Search:moveLeft()
+    if (self.selected - 1) % self.cols ~= 0 then
+        self.selected = self.selected - 1
+    end
+end
+
+function Search:moveRight()
+    if (self.selected % self.cols) ~= 0 and (self.selected + 1) <= #self.results then
+        self.selected = self.selected + 1
+    end
 end
 
 -- Get currently selected result
