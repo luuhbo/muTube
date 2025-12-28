@@ -110,7 +110,10 @@ function love.update(dt)
             elseif event == "return" then
                 local video = Search:getSelected()
                 if video then
-                    VideoPlayer:play(video.url)
+                    VideoPlayer:play(video.url, function()
+                        LoadingUI:stop()
+                        appState = STATE.RESULTS
+                    end)
                     appState = STATE.VIDEO_LOADING
                 end
             end
@@ -124,6 +127,11 @@ function love.update(dt)
 end
 
 function love.draw()
+    -- If MPV is running and we've hidden the Love window, skip drawing to avoid flicker
+    if VideoPlayer and VideoPlayer.mpv_running then
+        return
+    end
+
     love.graphics.clear(1, 1, 1)
 
     SearchBarUI:draw(searchQuery, appState == STATE.SEARCH)

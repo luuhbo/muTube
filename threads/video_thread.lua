@@ -16,25 +16,27 @@ while true do
 
     ch_out:push({ type="status", msg="Setting up environment..." })
 
-    -- 1️⃣ Setup environment and GPTOKEYB
-    local setup_cmd = string.format([[
-        . %s &&
-        SETUP_SDL_ENVIRONMENT &&
-        export LD_LIBRARY_PATH='%s/libs.aarch64:$LD_LIBRARY_PATH' &&
-        SET_VAR 'system' 'foreground_process' '%s' &&
-        GPTOKEYB '%s' '%s'
-    ]],
-        func_sh,
-        bindir,
-        mpv_path,
-        mpv_path,
-        gptk_core
-    )
+    -- Setup environment if func.sh exists
+    if func_sh and func_sh ~= "" then
+        local setup_cmd = string.format([[
+            . %s &&
+            SETUP_SDL_ENVIRONMENT &&
+            export LD_LIBRARY_PATH='%s/libs.aarch64:$LD_LIBRARY_PATH' &&
+            SET_VAR 'system' 'foreground_process' '%s' &&
+            GPTOKEYB '%s' '%s'
+        ]],
+            func_sh,
+            bindir,
+            mpv_path,
+            mpv_path,
+            gptk_core
+        )
+        os.execute(setup_cmd)
+    end
 
-    os.execute(setup_cmd)
     ch_out:push({ type="status", msg="Environment ready, extracting stream..." })
 
-    -- 2️⃣ Extract direct stream URL via yt-dlp
+    -- Extract direct stream URL via yt-dlp
     local js_flag = ""
     if node_path and node_path ~= "" then
         js_flag = "--js-runtimes node:" .. node_path
@@ -56,12 +58,10 @@ while true do
         if stream_url == "" then
             ch_out:push({ type="error", msg="No stream URL extracted" })
         else
-            ch_out:push({ type="status", msg="Launching MPV..." })
-            -- 3️⃣ Launch MPV
-            local mpv_cmd = string.format('%s --no-config --fullscreen --keepaspect=yes --video-zoom=0 --video-align-x=0 --video-align-y=0 "%s"',
-                mpv_path, stream_url)
-            os.execute(mpv_cmd)
-            ch_out:push({ type="done" })
+            -- Signal UI that stream URL is ready; main thread will launch MPV (blocks)
+            ch_out:push({ type="status", msg="Stream URL extracted" })
+            ch_out:push({ type="stream", url=stream_url })
+            -- Once main thread launches MPV and it exits, the thread simply waits for next job
         end
     end
 end

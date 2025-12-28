@@ -47,4 +47,9 @@ function LoadingUI:draw(text)
     love.graphics.rectangle("fill", fx, y, fillW, barH, 8, 8)
 end
 
+function LoadingUI:stop()
+    self.active = false
+end
+
+
 return LoadingUI

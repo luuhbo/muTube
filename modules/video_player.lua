@@ -21,17 +21,13 @@ local ch_out = love.thread.getChannel("video_out")
 VideoPlayer.loading = false
 VideoPlayer.status = ""
 
-function VideoPlayer:play(url)
+function VideoPlayer:play(url, onReady)
     if not url or url == "" then return end
 
-    -- Release old thread if exists
     if thread then thread:release() end
-
-    -- Start new thread
     thread = love.thread.newThread("threads/video_thread.lua")
     thread:start()
 
-    -- Push job to thread
     ch_in:push({
         url        = url,
         ytdlp_path = config.ytdlp_path,
@@ -42,9 +38,10 @@ function VideoPlayer:play(url)
         gptk_core  = config.gptk_core
     })
 
-    VideoPlayer.loading = true
-    VideoPlayer.status  = "Initializing..."
+    self.loading = true
+    self.status  = "Initializing..."
     self.progress = 0
+    self.onReady = onReady  -- store callback
 end
 
 function VideoPlayer:update()
@@ -66,15 +63,39 @@ function VideoPlayer:update()
             self.status = "Error: " .. msg.msg
             self.loading = false
             print("[VIDEO THREAD]", self.status)
+        elseif msg.type == "stream" then
+            -- Stream URL received from worker thread: launch MPV from main thread (blocking)
+            local stream_url = msg.url
+            self.status = "Launching MPV..."
+            print("[VIDEO THREAD]", self.status)
 
-        elseif msg.type == "done" then
-            self.status = "Video launched"
-            self.progress = 1
-            self.loading = false
+            -- Call main.lua callback to hide LoadingUI / restore state
+            if self.onReady then
+                self.onReady()
+                self.onReady = nil
+            end
+
+            -- Hide Love window (best-effort) and mark mpv running
+            if love and love.window and love.window.setVisible then
+                pcall(function() love.window.setVisible(false) end)
+            end
+            self.mpv_running = true
+
+            -- Build mpv command and run it blocking on the main thread so the app stops rendering
+            local mpv_opts = "--no-config --fullscreen --keepaspect=yes --video-zoom=0 --video-align-x=0 --video-align-y=0"
+            local mpv_cmd = string.format('%s %s "%s"', config.mpv_path, mpv_opts, stream_url)
+            os.execute(mpv_cmd)
+
+            -- After MPV exits, restore window and update status
+            if love and love.window and love.window.setVisible then
+                pcall(function() love.window.setVisible(true) end)
+            end
+            self.mpv_running = false
+            self.status = "MPV exited"
             print("[VIDEO THREAD]", self.status)
         end
     end
 end
 
-
 return VideoPlayer
+
