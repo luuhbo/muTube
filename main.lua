@@ -3,7 +3,9 @@
 -- App states
 local STATE = {
     SEARCH = "search",
+    SEARCH_LOADING = "search_loading",
     RESULTS = "results",
+    VIDEO_LOADING = "video_loading",
 }
 
 local appState = STATE.SEARCH
@@ -15,13 +17,14 @@ local VideoPlayer = require("modules.video_player")
 
 -- UI
 local FooterUI = require("ui.footer")
+local LoadingUI = require("ui.loading")
 local SearchResultsUI = require("ui.search_results")
 local SearchBarUI = require("ui.search_bar")
 local Keyboard = require("ui.osk")  -- OSK
 local Logger = require("modules.logger")
 
 -- Search query
-local searchQuery = ""
+local searchQuery = "dog of wisdom"
 
 -- ENV from mux_launch.sh
 local screenWidth = os.getenv("SCREEN_WIDTH")
@@ -34,16 +37,35 @@ function love.load()
     love.window.setMode(width, height)
     love.graphics.setFont(love.graphics.newFont(30))
     Input.load()
+    Search:init()
+
 
     SearchBarUI:load(width, height)
     SearchResultsUI:load(width, height)
     FooterUI:load(width, height)
-    -- small font for on-screen debug overlay
-    debugFont = love.graphics.newFont(14)
+
+
 end
 
 function love.update(dt)
     Input.update(dt)
+
+    -- Update search loading
+    if appState == STATE.SEARCH_LOADING then
+        Search:update()   -- polls search thread
+        LoadingUI:update(dt)  -- animate progress bar
+
+        if not Search.loading then
+            appState = STATE.RESULTS
+        end
+    end
+
+    -- Update video loading
+    if appState == STATE.VIDEO_LOADING then
+        VideoPlayer:update()   -- poll video thread
+        LoadingUI:update(dt)
+    end
+
 
     Input.onEvent(function(event)
         -- Keyboard active consumes input first
@@ -61,7 +83,7 @@ function love.update(dt)
                     function(text) -- on submit
                         searchQuery = text
                         Search:query(searchQuery) -- trigger search
-                        appState = STATE.RESULTS
+                        appState = STATE.SEARCH_LOADING
                     end,
                     function() -- on cancel
                         print("Keyboard cancelled")
@@ -89,6 +111,7 @@ function love.update(dt)
                 local video = Search:getSelected()
                 if video then
                     VideoPlayer:play(video.url)
+                    appState = STATE.VIDEO_LOADING
                 end
             end
         end
@@ -103,19 +126,24 @@ end
 function love.draw()
     love.graphics.clear(1, 1, 1)
 
-    -- Draw search bar (focused if in SEARCH state)
     SearchBarUI:draw(searchQuery, appState == STATE.SEARCH)
 
-    -- Draw search results
-    SearchResultsUI:draw(Search)
+    if appState == STATE.SEARCH_LOADING then
+        LoadingUI:draw("Searching...")
+    elseif appState == STATE.VIDEO_LOADING then
+        LoadingUI:draw(VideoPlayer.status)
+    else
+        SearchResultsUI:draw(Search)
+    end
 
     FooterUI:draw()
 
-    -- Draw on-screen keyboard if active
     if Keyboard.active then
         Keyboard.draw()
     end
 end
+
+
 
 function love.keypressed(key)
     -- Map keyboard keys to input events
